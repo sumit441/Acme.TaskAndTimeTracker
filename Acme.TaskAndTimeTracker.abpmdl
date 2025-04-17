@@ -1,0 +1,105 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "4.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.Account": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.Identity": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "9.1.0",
+      "isInstalled": true
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "9.1.0",
+      "isInstalled": true
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "Acme.TaskAndTimeTracker.Application": {
+      "path": "src/Acme.TaskAndTimeTracker.Application/Acme.TaskAndTimeTracker.Application.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.Application.Tests": {
+      "path": "test/Acme.TaskAndTimeTracker.Application.Tests/Acme.TaskAndTimeTracker.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.Domain.Shared": {
+      "path": "src/Acme.TaskAndTimeTracker.Domain.Shared/Acme.TaskAndTimeTracker.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.Application.Contracts": {
+      "path": "src/Acme.TaskAndTimeTracker.Application.Contracts/Acme.TaskAndTimeTracker.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.HttpApi": {
+      "path": "src/Acme.TaskAndTimeTracker.HttpApi/Acme.TaskAndTimeTracker.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.HttpApi.Client": {
+      "path": "src/Acme.TaskAndTimeTracker.HttpApi.Client/Acme.TaskAndTimeTracker.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.Web": {
+      "path": "src/Acme.TaskAndTimeTracker.Web/Acme.TaskAndTimeTracker.Web.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.Web.Tests": {
+      "path": "test/Acme.TaskAndTimeTracker.Web.Tests/Acme.TaskAndTimeTracker.Web.Tests.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.EntityFrameworkCore.Tests": {
+      "path": "test/Acme.TaskAndTimeTracker.EntityFrameworkCore.Tests/Acme.TaskAndTimeTracker.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.EntityFrameworkCore": {
+      "path": "src/Acme.TaskAndTimeTracker.EntityFrameworkCore/Acme.TaskAndTimeTracker.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.TestBase": {
+      "path": "test/Acme.TaskAndTimeTracker.TestBase/Acme.TaskAndTimeTracker.TestBase.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.Domain.Tests": {
+      "path": "test/Acme.TaskAndTimeTracker.Domain.Tests/Acme.TaskAndTimeTracker.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/Acme.TaskAndTimeTracker.HttpApi.Client.ConsoleTestApp/Acme.TaskAndTimeTracker.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "Acme.TaskAndTimeTracker.DbMigrator": {
+      "path": "src/Acme.TaskAndTimeTracker.DbMigrator/Acme.TaskAndTimeTracker.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "Acme.TaskAndTimeTracker.Domain": {
+      "path": "src/Acme.TaskAndTimeTracker.Domain/Acme.TaskAndTimeTracker.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

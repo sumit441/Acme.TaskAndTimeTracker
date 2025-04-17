@@ -1,0 +1,15 @@
+﻿{
+  "applications": {
+    "Acme.TaskAndTimeTracker.Web": {
+      "type": "dotnet-project",
+      "launchUrl": "https://localhost:44329",
+      "path": "../../../src/Acme.TaskAndTimeTracker.Web/Acme.TaskAndTimeTracker.Web.csproj",
+      "kubernetesService": ".*-web$",
+      "healthCheckEndpoint": "/health-status",
+      "healthUiEndpoint": "/health-ui",
+      "execution": {
+        "order": 2
+      }
+    }
+  }
+}
