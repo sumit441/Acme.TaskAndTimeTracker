@@ -11,6 +11,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
+using Volo.Abp.Users;
 
 namespace Acme.TaskAndTimeTracker;
 
@@ -139,7 +140,7 @@ public class ProjectAppService : ApplicationService
 
     [Authorize(TaskAndTimeTrackerPermissions.Projects.Update)]
     [HttpPut("api/projects/{id}")]
-    public async Task UpdateAsync(Guid id, CreateProjectDto input)
+    public async Task<ProjectDto> UpdateAsync(Guid id, CreateProjectDto input)
     {
         try
         {
@@ -151,6 +152,13 @@ public class ProjectAppService : ApplicationService
             project.Name = input.Name;
             project.Description = input.Description;
             await _projectRepository.UpdateAsync(project);
+
+            return new ProjectDto
+            {
+                Id = project.Id,
+                Description = project.Description,
+                Name = project.Name
+            };
         }
         catch (UserFriendlyException)
         {
