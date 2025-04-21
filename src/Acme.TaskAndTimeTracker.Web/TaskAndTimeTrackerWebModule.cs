@@ -151,18 +151,6 @@ public class TaskAndTimeTrackerWebModule : AbpModule
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
 
-        context.Services.AddAbpDbContext<TaskAndTimeTrackerDbContext>(options =>
-        {
-            options.AddRepository<Project, Guid>();
-            options.AddRepository<ProjectTask, Guid>();
-            options.AddRepository<TimeEntry, Guid>();
-        });
-
-        Configure<AbpDbContextOptions>(options =>
-        {
-            options.UseNpgsql();
-        });
-
         Configure<PermissionManagementOptions>(options =>
         {
             options.IsDynamicPermissionStoreEnabled = true;
