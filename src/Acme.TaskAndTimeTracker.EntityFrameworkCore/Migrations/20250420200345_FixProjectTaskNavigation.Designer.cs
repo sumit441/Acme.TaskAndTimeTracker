@@ -3,6 +3,7 @@ using System;
 using Acme.TaskAndTimeTracker.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Acme.TaskAndTimeTracker.Migrations
 {
     [DbContext(typeof(TaskAndTimeTrackerDbContext))]
-    partial class TaskAndTimeTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250420200345_FixProjectTaskNavigation")]
+    partial class FixProjectTaskNavigation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,7 +81,7 @@ namespace Acme.TaskAndTimeTracker.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AssignedUserId")
+                    b.Property<Guid>("AssignedUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -94,6 +97,9 @@ namespace Acme.TaskAndTimeTracker.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ProjectId1")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -107,6 +113,8 @@ namespace Acme.TaskAndTimeTracker.Migrations
                     b.HasIndex("AssignedUserId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId1");
 
                     b.ToTable("ProjectTasks", (string)null);
                 });
@@ -1995,13 +2003,18 @@ namespace Acme.TaskAndTimeTracker.Migrations
                     b.HasOne("Volo.Abp.Identity.IdentityUser", "AssignedUser")
                         .WithMany()
                         .HasForeignKey("AssignedUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("Acme.TaskAndTimeTracker.Projects.Project", "Project")
-                        .WithMany("ProjectTasks")
+                        .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Acme.TaskAndTimeTracker.Projects.Project", null)
+                        .WithMany("ProjectTasks")
+                        .HasForeignKey("ProjectId1");
 
                     b.Navigation("AssignedUser");
 
