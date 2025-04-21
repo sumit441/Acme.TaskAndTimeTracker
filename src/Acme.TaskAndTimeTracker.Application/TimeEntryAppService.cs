@@ -149,7 +149,7 @@ namespace Acme.TaskAndTimeTracker
 
         [Authorize(TaskAndTimeTrackerPermissions.TimeEntries.Update)]
         [HttpPut("api/time-entries/{id}")]
-        public async Task UpdateAsync(Guid id, CreateUpdateTimeEntryDto input)
+        public async Task<TimeEntryDto> UpdateAsync(Guid id, CreateUpdateTimeEntryDto input)
         {
             try
             {
@@ -164,6 +164,16 @@ namespace Acme.TaskAndTimeTracker
                 timeEntry.LoggedHours = input.LoggedHours;
                 timeEntry.Notes = input.Notes;
                 await _timeEntryRepository.UpdateAsync(timeEntry);
+
+                return new TimeEntryDto
+                {
+                    Id = timeEntry.Id,
+                    TaskId = timeEntry.TaskId,
+                    UserId = timeEntry.UserId,
+                    LogDate = timeEntry.LogDate,
+                    LoggedHours = timeEntry.LoggedHours,
+                    Notes = timeEntry.Notes
+                };
             }
             catch (UserFriendlyException)
             {
