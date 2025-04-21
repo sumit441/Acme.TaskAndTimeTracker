@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Guids;
 
 namespace Acme.TaskAndTimeTracker
 {
@@ -22,6 +23,7 @@ namespace Acme.TaskAndTimeTracker
         public ReportingAppService(IRepository<TimeEntry, Guid> timeEntryRepository)
         {
             _timeEntryRepository = timeEntryRepository;
+
         }
 
         [Authorize(TaskAndTimeTrackerPermissions.Reports.View)]

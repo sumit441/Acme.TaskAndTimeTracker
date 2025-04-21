@@ -20,10 +20,11 @@ namespace Acme.TaskAndTimeTracker
     public class TimeEntryAppService : ApplicationService
     {
         private readonly IRepository<TimeEntry, Guid> _timeEntryRepository;
-
-        public TimeEntryAppService(IRepository<TimeEntry, Guid> timeEntryRepository)
+        private readonly IGuidGenerator _guidGenerator;
+        public TimeEntryAppService(IRepository<TimeEntry, Guid> timeEntryRepository, IGuidGenerator guidGenerator)
         {
             _timeEntryRepository = timeEntryRepository;
+            _guidGenerator = guidGenerator;
         }
 
         [Authorize(TaskAndTimeTrackerPermissions.TimeEntries.Create)]

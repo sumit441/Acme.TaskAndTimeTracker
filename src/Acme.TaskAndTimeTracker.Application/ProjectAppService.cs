@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Guids;
 
 namespace Acme.TaskAndTimeTracker;
 
@@ -17,10 +18,12 @@ namespace Acme.TaskAndTimeTracker;
 public class ProjectAppService : ApplicationService
 {
     private readonly IRepository<Project, Guid> _projectRepository;
+    private readonly IGuidGenerator _guidGenerator;
 
-    public ProjectAppService(IRepository<Project, Guid> projectRepository)
+    public ProjectAppService(IRepository<Project, Guid> projectRepository, IGuidGenerator guidGenerator)
     {
         _projectRepository = projectRepository;
+        _guidGenerator = guidGenerator;
     }
 
     [Authorize(TaskAndTimeTrackerPermissions.Projects.Create)]
