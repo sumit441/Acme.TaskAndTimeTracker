@@ -6,6 +6,7 @@ using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
 using Volo.Abp.TenantManagement;
+using Acme.TaskAndTimeTracker.Permissions;
 
 namespace Acme.TaskAndTimeTracker;
 

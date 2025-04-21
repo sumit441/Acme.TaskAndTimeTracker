@@ -50,6 +50,12 @@ using Volo.Abp.OpenIddict;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.SettingManagement.Web;
 using Volo.Abp.Studio.Client.AspNetCore;
+using Acme.TaskAndTimeTracker.Data;
+using Volo.Abp.Data;
+using Acme.TaskAndTimeTracker.Tasks;
+using Acme.TaskAndTimeTracker.TimeEntries;
+using Volo.Abp.EntityFrameworkCore;
+using Acme.TaskAndTimeTracker.Projects;
 
 namespace Acme.TaskAndTimeTracker.Web;
 
@@ -145,12 +151,23 @@ public class TaskAndTimeTrackerWebModule : AbpModule
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
 
+        context.Services.AddAbpDbContext<TaskAndTimeTrackerDbContext>(options =>
+        {
+            options.AddRepository<Project, Guid>();
+            options.AddRepository<ProjectTask, Guid>();
+            options.AddRepository<TimeEntry, Guid>();
+        });
+
+        Configure<AbpDbContextOptions>(options =>
+        {
+            options.UseNpgsql();
+        });
+
         Configure<PermissionManagementOptions>(options =>
         {
             options.IsDynamicPermissionStoreEnabled = true;
         });
     }
-
 
     private void ConfigureHealthChecks(ServiceConfigurationContext context)
     {

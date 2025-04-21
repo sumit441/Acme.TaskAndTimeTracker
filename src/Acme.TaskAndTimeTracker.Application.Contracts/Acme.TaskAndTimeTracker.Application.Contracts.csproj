@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <RootNamespace>Acme.TaskAndTimeTracker</RootNamespace>
   </PropertyGroup>
 
@@ -17,6 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Volo.Abp.PermissionManagement.Application.Contracts" Version="9.1.0" />
     <PackageReference Include="Volo.Abp.FeatureManagement.Application.Contracts" Version="9.1.0" />
     <PackageReference Include="Volo.Abp.SettingManagement.Application.Contracts" Version="9.1.0" />

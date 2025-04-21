@@ -28,6 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Volo.Abp.Autofac" Version="9.1.0" />
     <PackageReference Include="Volo.Abp.Http.Client.IdentityModel" Version="9.1.0" />
   </ItemGroup>

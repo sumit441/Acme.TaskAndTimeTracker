@@ -17,6 +17,8 @@ using Volo.Abp.Emailing;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 using Volo.Abp.TenantManagement;
+using Volo.Abp.Data;
+using Volo.Abp;
 
 namespace Acme.TaskAndTimeTracker;
 
@@ -69,6 +71,13 @@ public class TaskAndTimeTrackerDomainModule : AbpModule
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());
+
+        base.ConfigureServices(context);
 #endif
+    }
+    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    {
+        var dataSeeder = context.ServiceProvider.GetRequiredService<TaskAndTimeTrackerDataSeeder>();
+        dataSeeder.SeedAsync(new DataSeedContext()).Wait();
     }
 }
