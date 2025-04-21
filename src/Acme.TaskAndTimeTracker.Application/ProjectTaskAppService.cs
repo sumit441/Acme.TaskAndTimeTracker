@@ -95,7 +95,7 @@ public class ProjectTaskAppService : ApplicationService
 
     [Authorize(TaskAndTimeTrackerPermissions.ProjectTasks.Update)]
     [HttpPut("api/tasks/{id}")]
-    public async Task UpdateAsync(Guid id, CreateUpdateTaskDto input)
+    public async Task<ProjectTaskDto> UpdateAsync(Guid id, CreateUpdateTaskDto input)
     {
         try
         {
@@ -112,6 +112,18 @@ public class ProjectTaskAppService : ApplicationService
             task.ProjectId = input.ProjectId;
             task.AssignedUserId = input.AssignedUserId;
             await _taskRepository.UpdateAsync(task);
+
+            return new ProjectTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                Status = task.Status,
+                Priority = task.Priority,
+                ProjectId = task.ProjectId,
+                AssignedUserId = task.AssignedUserId
+            };
         }
         catch (UserFriendlyException)
         {
