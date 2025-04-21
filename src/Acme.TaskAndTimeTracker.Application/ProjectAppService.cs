@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Acme.TaskTracker.Projects;
+using Acme.TaskAndTimeTracker.DTOs;
+using Acme.TaskAndTimeTracker.Permissions;
+using Acme.TaskAndTimeTracker.Projects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,7 +11,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
-namespace Acme.TaskTracker;
+namespace Acme.TaskAndTimeTracker;
 
 [Authorize]
 public class ProjectAppService : ApplicationService
@@ -21,14 +23,25 @@ public class ProjectAppService : ApplicationService
         _projectRepository = projectRepository;
     }
 
+    [Authorize(TaskAndTimeTrackerPermissions.Projects.Create)]
     [HttpPost("api/projects")]
-    public async Task<ProjectDto> CreateAsync(CreateUpdateProjectDto input)
+    public async Task<ProjectDto> CreateAsync(CreateProjectDto input)
     {
         try
         {
             var project = new Project(GuidGenerator.Create(), input.Name, input.Description);
             await _projectRepository.InsertAsync(project);
-            return ObjectMapper.Map<Project, ProjectDto>(project);
+
+            return new ProjectDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description
+            };
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -37,6 +50,7 @@ public class ProjectAppService : ApplicationService
         }
     }
 
+    [Authorize(TaskAndTimeTrackerPermissions.Projects.Delete)]
     [HttpDelete("api/projects/{id}")]
     public async Task DeleteAsync(Guid id)
     {
@@ -48,6 +62,10 @@ public class ProjectAppService : ApplicationService
                 throw new UserFriendlyException("Project not found.");
             }
             await _projectRepository.DeleteAsync(project);
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -66,7 +84,17 @@ public class ProjectAppService : ApplicationService
             {
                 throw new UserFriendlyException("Project not found.");
             }
-            return ObjectMapper.Map<Project, ProjectDto>(project);
+
+            return new ProjectDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description
+            };
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -81,7 +109,23 @@ public class ProjectAppService : ApplicationService
         try
         {
             var projects = await _projectRepository.GetListAsync();
-            return ObjectMapper.Map<List<Project>, List<ProjectDto>>(projects);
+
+            var projectDtos = new List<ProjectDto>();
+            foreach (var project in projects)
+            {
+                projectDtos.Add(new ProjectDto
+                {
+                    Id = project.Id,
+                    Name = project.Name,
+                    Description = project.Description
+                });
+            }
+
+            return projectDtos;
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -90,8 +134,9 @@ public class ProjectAppService : ApplicationService
         }
     }
 
+    [Authorize(TaskAndTimeTrackerPermissions.Projects.Update)]
     [HttpPut("api/projects/{id}")]
-    public async Task UpdateAsync(Guid id, CreateUpdateProjectDto input)
+    public async Task UpdateAsync(Guid id, CreateProjectDto input)
     {
         try
         {
@@ -103,6 +148,10 @@ public class ProjectAppService : ApplicationService
             project.Name = input.Name;
             project.Description = input.Description;
             await _projectRepository.UpdateAsync(project);
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
