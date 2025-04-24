@@ -10,7 +10,8 @@ namespace Acme.TaskAndTimeTracker
 {
     public interface IReportAppService : IApplicationService
     {
-        Task<List<ProjectReportDto>> GetProjectReportAsync();
-        Task<List<UserReportDto>> GetUserReportAsync();
+        Task<List<ReportResultDto>> GetTotalHoursByProjectAsync(ReportFilterDto input);
+        Task<List<ReportResultDto>> GetTotalHoursByUserAsync(ReportFilterDto input);
+        Task<List<ReportResultDto>> GetTotalHoursByTaskAsync(ReportFilterDto input);
     }
 }
