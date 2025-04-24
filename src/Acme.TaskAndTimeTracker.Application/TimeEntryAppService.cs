@@ -44,6 +44,7 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
+                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
@@ -99,6 +100,7 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
+                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
@@ -134,6 +136,7 @@ namespace Acme.TaskAndTimeTracker
                          from task in taskGroup.DefaultIfEmpty()
                          select new TimeEntryDto
                          {
+                             Id = e.Id,
                              TaskId = e.TaskId,
                              TaskTitle = task != null ? task.Title : "",
                              UserId = e.UserId,
@@ -179,6 +182,7 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
+                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
