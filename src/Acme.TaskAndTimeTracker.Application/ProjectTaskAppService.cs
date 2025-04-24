@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Acme.TaskAndTimeTracker.DTOs;
 using Acme.TaskAndTimeTracker.Permissions;
+using Acme.TaskAndTimeTracker.Projects;
 using Acme.TaskAndTimeTracker.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,24 +13,29 @@ using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
+using Volo.Abp.Identity;
 
 namespace Acme.TaskAndTimeTracker;
 
 [Authorize]
-public class ProjectTaskAppService : ApplicationService
+public class ProjectTaskAppService : ApplicationService, IProjectTaskAppService
 {
+    private readonly IRepository<Project, Guid> _projectRepository;
     private readonly IRepository<ProjectTask, Guid> _taskRepository;
     private readonly IGuidGenerator _guidGenerator;
+    private readonly IRepository<IdentityUser, Guid> _abpUsers;
 
-    public ProjectTaskAppService(IRepository<ProjectTask, Guid> taskRepository, IGuidGenerator guidGenerator)
+    public ProjectTaskAppService(IRepository<ProjectTask, Guid> taskRepository, IGuidGenerator guidGenerator, IRepository<IdentityUser, Guid> abpUsers, IRepository<Project, Guid> projectRepository)
     {
         _taskRepository = taskRepository;
         _guidGenerator = guidGenerator;
+        _abpUsers = abpUsers;
+        _projectRepository = projectRepository;
     }
 
     [Authorize(TaskAndTimeTrackerPermissions.ProjectTasks.Create)]
     [HttpPost("api/tasks")]
-    public async Task<ProjectTaskDto> CreateAsync(CreateUpdateTaskDto input)
+    public async Task<ProjectTaskDto> CreateAsync(CreateUpdateProjectTaskDto input)
     {
         try
         {
@@ -41,14 +47,13 @@ public class ProjectTaskAppService : ApplicationService
                      input.Status,
                      input.Priority,
                      input.ProjectId,
-                     input.AssignedUserId ?? Guid.Empty
+                     input.AssignedUserId
             );
 
             await _taskRepository.InsertAsync(task);
 
             return new ProjectTaskDto
             {
-                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -95,7 +100,7 @@ public class ProjectTaskAppService : ApplicationService
 
     [Authorize(TaskAndTimeTrackerPermissions.ProjectTasks.Update)]
     [HttpPut("api/tasks/{id}")]
-    public async Task<ProjectTaskDto> UpdateAsync(Guid id, CreateUpdateTaskDto input)
+    public async Task<ProjectTaskDto> UpdateAsync(Guid id, CreateUpdateProjectTaskDto input)
     {
         try
         {
@@ -115,7 +120,6 @@ public class ProjectTaskAppService : ApplicationService
 
             return new ProjectTaskDto
             {
-                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -149,7 +153,6 @@ public class ProjectTaskAppService : ApplicationService
 
             return new ProjectTaskDto
             {
-                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -171,42 +174,47 @@ public class ProjectTaskAppService : ApplicationService
     }
 
     [HttpGet("api/tasks")]
-    public async Task<PagedResultDto<ProjectTaskDto>> GetListAsync(int skipCount = 0, int maxResultCount = 10)
+    public async Task<PagedResultDto<ProjectTaskDto>> GetListAsync(ProjectTaskFilterDto input)
     {
-        try
-        {
-            // Provide a default sorting parameter
-            var sorting = nameof(ProjectTask.DueDate); // Sort by DueDate as an example
+        if (string.IsNullOrWhiteSpace(input.Sorting))
+            input.Sorting = "Title";
 
-            // Fetch paginated tasks with sorting
-            var tasks = await _taskRepository.GetPagedListAsync(skipCount, maxResultCount, sorting);
+        var tasks = await _taskRepository.GetQueryableAsync();
+        var users = await _abpUsers.GetQueryableAsync();
+        var projects = await _projectRepository.GetQueryableAsync();
 
-            var totalCount = (int)await _taskRepository.GetCountAsync(); // Explicitly cast 'long' to 'int'
+        var query = (from t in tasks
+                     join u in users on t.AssignedUserId equals u.Id into userGroup
+                     from user in userGroup.DefaultIfEmpty()
+                     join p in projects on t.ProjectId equals p.Id into projectGroup
+                     from proj in projectGroup.DefaultIfEmpty()
+                     select new ProjectTaskDto
+                     {
+                         Title = t.Title,
+                         Description = t.Description,
+                         Status = t.Status,
+                         Priority = t.Priority,
+                         DueDate = t.DueDate,
+                         ProjectId = t.ProjectId,
+                         ProjectName = proj != null ? proj.Name : "",
+                         AssignedUserId = t.AssignedUserId,
+                         AssignedUserName = user != null ? user.UserName : "",
+                         CreationTime = t.CreationTime
+                     })
+                    .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+                        t => t.Title.Contains(input.Filter) ||
+                             t.Description.Contains(input.Filter) ||
+                             t.ProjectName.Contains(input.Filter) ||
+                             t.AssignedUserName.Contains(input.Filter));
 
-            // Map tasks to DTOs
-            var taskDtos = tasks.Select(task => new ProjectTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                DueDate = task.DueDate,
-                Status = task.Status,
-                Priority = task.Priority,
-                ProjectId = task.ProjectId,
-                AssignedUserId = task.AssignedUserId
-            }).ToList();
+        var totalCount = await AsyncExecuter.CountAsync(query);
 
-            // Return paginated result
-            return new PagedResultDto<ProjectTaskDto>(taskDtos, totalCount);
-        }
-        catch (UserFriendlyException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogException(ex);
-            throw new UserFriendlyException("An error occurred while retrieving the task list.");
-        }
+        var items = await AsyncExecuter.ToListAsync(
+            query
+            .Skip(input.SkipCount)
+            .Take(input.MaxResultCount)
+        );
+
+        return new PagedResultDto<ProjectTaskDto>(totalCount, items);
     }
 }
