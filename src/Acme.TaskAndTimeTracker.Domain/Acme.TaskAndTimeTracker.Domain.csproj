@@ -19,6 +19,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0.2" />
     <PackageReference Include="Volo.Abp.Emailing" Version="9.1.0" />
     <PackageReference Include="Volo.Abp.Caching" Version="9.1.0" />
     <PackageReference Include="Volo.Abp.PermissionManagement.Domain.Identity" Version="9.1.0" />
