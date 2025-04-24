@@ -90,9 +90,7 @@ public class TaskAndTimeTrackerDbContext :
             b.HasKey(x => x.Id);
             b.Property(x => x.Name).IsRequired().HasMaxLength(200);
             b.Property(x => x.Description).HasMaxLength(1000);
-
-            // If soft delete is implemented, handle query filters for soft-deleted entities
-            b.HasQueryFilter(x => !x.IsDeleted); // Assuming "IsDeleted" is your soft-delete field
+            b.HasQueryFilter(x => !x.IsDeleted); 
         });
 
         builder.Entity<ProjectTask>(b =>
@@ -108,17 +106,15 @@ public class TaskAndTimeTrackerDbContext :
                 .HasConversion<int>();
 
             b.HasOne(x => x.Project)
-                 .WithMany(p => p.ProjectTasks) // ✅ Navigation property on Project entity
+                 .WithMany(p => p.ProjectTasks) 
                  .HasForeignKey(x => x.ProjectId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-            b.HasOne(x => x.AssignedUser) // Each ProjectTask is assigned to one user
-                .WithMany() // User can be assigned many tasks (user side will use IdentityUser)
-                .HasForeignKey(x => x.AssignedUserId) // Foreign key on AssignedUserId
-                .OnDelete(DeleteBehavior.SetNull); // When the user is deleted, set the AssignedUserId to null
-
-            // Ensure the ProjectTask does not get affected by the soft-delete filter
-            b.HasQueryFilter(x => x.Project != null && !x.Project.IsDeleted); // Ensure Project is not deleted
+            b.HasOne(x => x.AssignedUser)
+                .WithMany()
+                .HasForeignKey(x => x.AssignedUserId)
+                .OnDelete(DeleteBehavior.SetNull); 
+            b.HasQueryFilter(x => x.Project != null && !x.Project.IsDeleted); 
         });
 
         builder.Entity<TimeEntry>(b =>
@@ -129,11 +125,10 @@ public class TaskAndTimeTrackerDbContext :
             b.Property(x => x.LogDate).IsRequired();
             b.Property(x => x.Notes).HasMaxLength(1000);
 
-            // Explicitly define the relationship with ProjectTask
-            b.HasOne(x => x.Task) // Use the navigation property in TimeEntry
-                .WithMany() // No navigation property in ProjectTask
-                .HasForeignKey(x => x.TaskId) // Use TaskId as the foreign key
-                .OnDelete(DeleteBehavior.Cascade); // Cascade delete when ProjectTask is deleted
+            b.HasOne(x => x.Task) 
+                .WithMany() 
+                .HasForeignKey(x => x.TaskId) 
+                .OnDelete(DeleteBehavior.Cascade); 
         });
     }
 }
