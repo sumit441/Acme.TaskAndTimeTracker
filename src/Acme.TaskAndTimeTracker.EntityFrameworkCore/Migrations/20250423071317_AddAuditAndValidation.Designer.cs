@@ -3,6 +3,7 @@ using System;
 using Acme.TaskAndTimeTracker.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Acme.TaskAndTimeTracker.Migrations
 {
     [DbContext(typeof(TaskAndTimeTrackerDbContext))]
-    partial class TaskAndTimeTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250423071317_AddAuditAndValidation")]
+    partial class AddAuditAndValidation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
