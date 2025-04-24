@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
 using Volo.Abp.Identity;
@@ -64,12 +65,14 @@ public class ProjectAppService : ApplicationService, IProjectAppService
     {
         try
         {
-            var project = await _projectRepository.GetAsync(id);
-            if (project == null)
+            var project = await _projectRepository.FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null) 
             {
                 throw new UserFriendlyException("Project not found.");
             }
-            await _projectRepository.DeleteAsync(project);
+
+            await _projectRepository.DeleteAsync(project, autoSave: true);
         }
         catch (UserFriendlyException)
         {
