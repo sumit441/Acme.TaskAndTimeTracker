@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Acme.TaskAndTimeTracker.DTOs
 {
@@ -11,10 +7,14 @@ namespace Acme.TaskAndTimeTracker.DTOs
         public List<T> Items { get; set; }
         public int TotalCount { get; set; }
 
-        public PagedResultDto(List<T> items, int totalCount)
+        public PagedResultDto()
         {
-            Items = items;
+        }
+
+        public PagedResultDto(int totalCount, List<T> items)
+        {
             TotalCount = totalCount;
+            Items = items;
         }
     }
 }
