@@ -54,6 +54,7 @@ public class ProjectTaskAppService : ApplicationService, IProjectTaskAppService
 
             return new ProjectTaskDto
             {
+                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -120,6 +121,7 @@ public class ProjectTaskAppService : ApplicationService, IProjectTaskAppService
 
             return new ProjectTaskDto
             {
+                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -153,6 +155,7 @@ public class ProjectTaskAppService : ApplicationService, IProjectTaskAppService
 
             return new ProjectTaskDto
             {
+                Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
@@ -190,6 +193,7 @@ public class ProjectTaskAppService : ApplicationService, IProjectTaskAppService
                      from proj in projectGroup.DefaultIfEmpty()
                      select new ProjectTaskDto
                      {
+                         Id = t.Id,
                          Title = t.Title,
                          Description = t.Description,
                          Status = t.Status,
