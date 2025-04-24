@@ -40,6 +40,7 @@ namespace Acme.TaskAndTimeTracker.Reports
         }
 
         [HttpGet("api/reports/by-project")]
+        [Authorize(TaskAndTimeTrackerPermissions.Reports.ViewByProject)]
         public async Task<List<ReportResultDto>> GetTotalHoursByProjectAsync(ReportFilterDto input)
         {
             var query = await _timeEntryRepository.GetQueryableAsync();
@@ -88,6 +89,7 @@ namespace Acme.TaskAndTimeTracker.Reports
         }
 
         [HttpGet("user")]
+        [Authorize(TaskAndTimeTrackerPermissions.Reports.ViewByProject)]
         public async Task<List<ReportResultDto>> GetTotalHoursByUserAsync(ReportFilterDto input)
         {
             var query = await _timeEntryRepository.GetQueryableAsync();
@@ -128,6 +130,7 @@ namespace Acme.TaskAndTimeTracker.Reports
         }
 
         [HttpGet("task")]
+        [Authorize(TaskAndTimeTrackerPermissions.Reports.ViewByTask)]
         public async Task<List<ReportResultDto>> GetTotalHoursByTaskAsync(ReportFilterDto input)
         {
             var query = await _timeEntryRepository.GetQueryableAsync();
