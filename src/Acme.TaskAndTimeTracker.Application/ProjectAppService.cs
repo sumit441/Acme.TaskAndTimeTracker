@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Acme.TaskAndTimeTracker.DTOs;
 using Acme.TaskAndTimeTracker.Permissions;
@@ -11,25 +13,28 @@ using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
+using Volo.Abp.Identity;
 using Volo.Abp.Users;
 
 namespace Acme.TaskAndTimeTracker;
 
 [Authorize]
-public class ProjectAppService : ApplicationService
+public class ProjectAppService : ApplicationService, IProjectAppService
 {
     private readonly IRepository<Project, Guid> _projectRepository;
     private readonly IGuidGenerator _guidGenerator;
+    private readonly IRepository<IdentityUser, Guid> _abpUsers;
 
-    public ProjectAppService(IRepository<Project, Guid> projectRepository, IGuidGenerator guidGenerator)
+    public ProjectAppService(IRepository<Project, Guid> projectRepository, IGuidGenerator guidGenerator, IRepository<IdentityUser, Guid> abpUsers)
     {
         _projectRepository = projectRepository;
         _guidGenerator = guidGenerator;
+        _abpUsers = abpUsers;
     }
 
     [Authorize(TaskAndTimeTrackerPermissions.Projects.Create)]
     [HttpPost("api/projects")]
-    public async Task<ProjectDto> CreateAsync(CreateProjectDto input)
+    public async Task<ProjectDto> CreateAsync(CreateUpdateProjectDto input)
     {
         try
         {
@@ -38,7 +43,6 @@ public class ProjectAppService : ApplicationService
 
             return new ProjectDto
             {
-                Id = project.Id,
                 Name = project.Name,
                 Description = project.Description
             };
@@ -91,7 +95,6 @@ public class ProjectAppService : ApplicationService
 
             return new ProjectDto
             {
-                Id = project.Id,
                 Name = project.Name,
                 Description = project.Description
             };
@@ -108,39 +111,41 @@ public class ProjectAppService : ApplicationService
     }
 
     [HttpGet("api/projects")]
-    public async Task<List<ProjectDto>> GetListAsync()
+    public async Task<PagedResultDto<ProjectDto>> GetListAsync(ProjectFilterDto input)
     {
-        try
-        {
-            var projects = await _projectRepository.GetListAsync();
+        if (string.IsNullOrWhiteSpace(input.Sorting))
+            input.Sorting = "Name";
 
-            var projectDtos = new List<ProjectDto>();
-            foreach (var project in projects)
-            {
-                projectDtos.Add(new ProjectDto
-                {
-                    Id = project.Id,
-                    Name = project.Name,
-                    Description = project.Description
-                });
-            }
+        var projects = await _projectRepository.GetQueryableAsync();
+        var users = await _abpUsers.GetQueryableAsync();
 
-            return projectDtos;
-        }
-        catch (UserFriendlyException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogException(ex);
-            throw new UserFriendlyException("An error occurred while retrieving the project list.");
-        }
+        var query = (from p in projects
+                     join u in users on p.CreatorId equals u.Id into creatorGroup
+                     from creator in creatorGroup.DefaultIfEmpty()
+                     select new ProjectDto
+                     {
+                         Name = p.Name,
+                         Description = p.Description,
+                         CreatorName = creator != null ? creator.UserName : "",
+                         CreationTime = p.CreationTime
+                     })
+                    .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+                        p => p.Name.Contains(input.Filter) || p.Description.Contains(input.Filter) || p.CreatorName.Contains(input.Filter));
+
+        var totalCount = await AsyncExecuter.CountAsync(query);
+
+        var items = await AsyncExecuter.ToListAsync(
+            query
+            .Skip(input.SkipCount)
+            .Take(input.MaxResultCount)
+        );
+
+        return new PagedResultDto<ProjectDto>(totalCount, items);
     }
 
     [Authorize(TaskAndTimeTrackerPermissions.Projects.Update)]
     [HttpPut("api/projects/{id}")]
-    public async Task<ProjectDto> UpdateAsync(Guid id, CreateProjectDto input)
+    public async Task<ProjectDto> UpdateAsync(Guid id, CreateUpdateProjectDto input)
     {
         try
         {
@@ -155,7 +160,6 @@ public class ProjectAppService : ApplicationService
 
             return new ProjectDto
             {
-                Id = project.Id,
                 Description = project.Description,
                 Name = project.Name
             };
