@@ -13,6 +13,8 @@ using Volo.Abp.Guids;
 using Volo.Abp;
 using Microsoft.AspNetCore.Authorization;
 using Acme.TaskAndTimeTracker.Permissions;
+using Volo.Abp.Identity;
+using Acme.TaskAndTimeTracker.Tasks;
 
 namespace Acme.TaskAndTimeTracker
 {
@@ -21,10 +23,14 @@ namespace Acme.TaskAndTimeTracker
     {
         private readonly IRepository<TimeEntry, Guid> _timeEntryRepository;
         private readonly IGuidGenerator _guidGenerator;
-        public TimeEntryAppService(IRepository<TimeEntry, Guid> timeEntryRepository, IGuidGenerator guidGenerator)
+        private readonly IRepository<ProjectTask, Guid> _taskRepository;
+        private readonly IRepository<IdentityUser, Guid> _abpUsers;
+        public TimeEntryAppService(IRepository<TimeEntry, Guid> timeEntryRepository, IGuidGenerator guidGenerator, IRepository<IdentityUser, Guid> abpUsers, IRepository<ProjectTask, Guid> taskRepository)
         {
             _timeEntryRepository = timeEntryRepository;
             _guidGenerator = guidGenerator;
+            _abpUsers = abpUsers;
+            _taskRepository = taskRepository;
         }
 
         [Authorize(TaskAndTimeTrackerPermissions.TimeEntries.Create)]
@@ -38,7 +44,6 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
-                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
@@ -94,7 +99,6 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
-                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
@@ -114,37 +118,45 @@ namespace Acme.TaskAndTimeTracker
         }
 
         [HttpGet("api/time-entries")]
-        public async Task<List<TimeEntryDto>> GetListAsync()
+        public async Task<PagedResultDto<TimeEntryDto>> GetListAsync(TimeEntryFilterDto input)
         {
-            try
-            {
-                var timeEntries = await _timeEntryRepository.GetListAsync();
+            if (string.IsNullOrWhiteSpace(input.Sorting))
+                input.Sorting = "LogDate";
 
-                var timeEntryDtos = new List<TimeEntryDto>();
-                foreach (var timeEntry in timeEntries)
-                {
-                    timeEntryDtos.Add(new TimeEntryDto
-                    {
-                        Id = timeEntry.Id,
-                        TaskId = timeEntry.TaskId,
-                        UserId = timeEntry.UserId,
-                        LogDate = timeEntry.LogDate,
-                        LoggedHours = timeEntry.LoggedHours,
-                        Notes = timeEntry.Notes
-                    });
-                }
+            var entries = await _timeEntryRepository.GetQueryableAsync();
+            var users = await _abpUsers.GetQueryableAsync();
+            var tasks = await _taskRepository.GetQueryableAsync();
 
-                return timeEntryDtos;
-            }
-            catch (UserFriendlyException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogException(ex);
-                throw new UserFriendlyException("An error occurred while retrieving the time entry list.");
-            }
+            var query = (from e in entries
+                         join u in users on e.UserId equals u.Id into userGroup
+                         from user in userGroup.DefaultIfEmpty()
+                         join t in tasks on e.TaskId equals t.Id into taskGroup
+                         from task in taskGroup.DefaultIfEmpty()
+                         select new TimeEntryDto
+                         {
+                             TaskId = e.TaskId,
+                             TaskTitle = task != null ? task.Title : "",
+                             UserId = e.UserId,
+                             UserName = user != null ? user.UserName : "",
+                             LoggedHours = e.LoggedHours,
+                             LogDate = e.LogDate,
+                             Notes = e.Notes,
+                             CreationTime = e.CreationTime
+                         })
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+                            e => e.TaskTitle.Contains(input.Filter) ||
+                                 e.UserName.Contains(input.Filter) ||
+                                 e.Notes.Contains(input.Filter));
+
+            var totalCount = await AsyncExecuter.CountAsync(query);
+
+            var items = await AsyncExecuter.ToListAsync(
+                query
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+            );
+
+            return new PagedResultDto<TimeEntryDto>(totalCount, items);
         }
 
         [Authorize(TaskAndTimeTrackerPermissions.TimeEntries.Update)]
@@ -167,7 +179,6 @@ namespace Acme.TaskAndTimeTracker
 
                 return new TimeEntryDto
                 {
-                    Id = timeEntry.Id,
                     TaskId = timeEntry.TaskId,
                     UserId = timeEntry.UserId,
                     LogDate = timeEntry.LogDate,
