@@ -8,20 +8,13 @@ namespace Acme.TaskAndTimeTracker.DTOs
 {
     public class TimeEntryDto
     {
-        public Guid Id { get; set; }
         public Guid TaskId { get; set; }
+        public string TaskTitle { get; set; }
         public Guid UserId { get; set; }
+        public string UserName { get; set; }
         public decimal LoggedHours { get; set; }
         public DateTime LogDate { get; set; }
         public string Notes { get; set; }
-    }
-
-    public class CreateUpdateTimeEntryDto
-    {
-        public Guid TaskId { get; set; }
-        public Guid UserId { get; set; }
-        public decimal LoggedHours { get; set; }
-        public DateTime LogDate { get; set; }
-        public string Notes { get; set; }
+        public DateTime CreationTime { get; set; }
     }
 }
