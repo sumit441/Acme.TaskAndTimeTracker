@@ -5,6 +5,7 @@ using Acme.TaskAndTimeTracker.Tasks;
 using Acme.TaskAndTimeTracker.TimeEntries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
+using Volo.Abp.Users;
 
 namespace Acme.TaskAndTimeTracker.Reports
 {
@@ -37,78 +39,136 @@ namespace Acme.TaskAndTimeTracker.Reports
             _abpUsers = abpUsers;
         }
 
-        [HttpGet("projectReport")]
-        public async Task<List<ProjectReportDto>> GetProjectReportAsync()
+        [HttpGet("api/reports/by-project")]
+        public async Task<List<ReportResultDto>> GetTotalHoursByProjectAsync(ReportFilterDto input)
         {
-            var projects = await _projectRepository.GetListAsync();
-            var tasks = await _taskRepository.GetListAsync();
-            var timeEntries = await _timeEntryRepository.GetListAsync();
+            var query = await _timeEntryRepository.GetQueryableAsync();
 
-            var report = projects.Select(project =>
+            if (input.UserId.HasValue)
+                query = query.Where(e => e.UserId == input.UserId.Value);
+
+            if (input.StartDate.HasValue)
+                query = query.Where(e => e.LogDate >= input.StartDate.Value);
+
+            if (input.EndDate.HasValue)
+                query = query.Where(e => e.LogDate <= input.EndDate.Value);
+
+            if (input.ProjectId.HasValue)
             {
-                var projectTasks = tasks.Where(t => t.ProjectId == project.Id).ToList();
-                var totalLoggedHours = timeEntries
-                    .Where(te => projectTasks.Any(pt => pt.Id == te.TaskId))
-                    .Sum(te => te.LoggedHours);
+                var taskQueryable = await _taskRepository.GetQueryableAsync();
+                var taskIds = taskQueryable
+                    .Where(t => t.ProjectId == input.ProjectId.Value)
+                    .Select(t => t.Id)
+                    .ToList();
 
-                return new ProjectReportDto
+                query = query.Where(e => taskIds.Contains(e.TaskId));
+            }
+
+            var taskQuery = await _taskRepository.GetQueryableAsync();
+            var projectQuery = await _projectRepository.GetQueryableAsync();
+
+            var result = await query
+                .Join(taskQuery,
+                      entry => entry.TaskId,
+                      task => task.Id,
+                      (entry, task) => new { entry, task })
+                .Join(projectQuery,
+                      x => x.task.ProjectId,
+                      project => project.Id,
+                      (x, project) => new { x.entry, ProjectName = project.Name, ProjectId = project.Id })
+                .GroupBy(x => new { x.ProjectId, x.ProjectName })
+                .Select(g => new ReportResultDto
                 {
-                    ProjectName = project.Name,
-                    TotalTasks = projectTasks.Count,
-                    TotalLoggedHours = (double)totalLoggedHours,
-                    Tasks = projectTasks.Select(t => new TaskReportDto
-                    {
-                        TaskId = t.Id,
-                        Title = t.Title,
-                        Status = t.Status,
-                        Priority = t.Priority,
-                        TotalLoggedHours = (double)timeEntries
-                            .Where(te => te.TaskId == t.Id)
-                            .Sum(te => te.LoggedHours),
-                        TimeEntries = timeEntries
-                            .Where(te => te.TaskId == t.Id)
-                            .Select(te => new TimeEntryReportDto
-                            {
-                                TimeEntryId = te.Id,
-                                LogDate = te.LogDate,
-                                LoggedHours = te.LoggedHours,
-                                Notes = te.Notes,
-                                ProjectName = project.Name
-                            }).ToList()
-                    }).ToList()
-                };
-            }).ToList();
+                    Title = g.Key.ProjectName,
+                    TotalHours = (float)g.Sum(e => e.entry.LoggedHours)
+                })
+                .ToListAsync();
 
-            return report;
+            return result;
         }
 
-        [HttpGet("userReport")]
-        public async Task<List<UserReportDto>> GetUserReportAsync()
+        [HttpGet("user")]
+        public async Task<List<ReportResultDto>> GetTotalHoursByUserAsync(ReportFilterDto input)
         {
-            var users = await _abpUsers.GetListAsync();
-            var timeEntries = await _timeEntryRepository.GetListAsync();
+            var query = await _timeEntryRepository.GetQueryableAsync();
 
-            var report = users.Select(user =>
+            if (input.ProjectId.HasValue)
             {
-                var userEntries = timeEntries.Where(te => te.UserId == user.Id).ToList();
+                var taskQueryable = await _taskRepository.GetQueryableAsync();
+                var taskIds = taskQueryable
+                    .Where(t => t.ProjectId == input.ProjectId.Value)
+                    .Select(t => t.Id)
+                    .ToList();
 
-                return new UserReportDto
+                query = query.Where(e => taskIds.Contains(e.TaskId));
+            }
+
+            if (input.StartDate.HasValue)
+                query = query.Where(e => e.LogDate >= input.StartDate.Value);
+
+            if (input.EndDate.HasValue)
+                query = query.Where(e => e.LogDate <= input.EndDate.Value);
+
+            var userQuery = await _abpUsers.GetQueryableAsync();
+
+            var result = await query
+                .Join(userQuery,
+                      entry => entry.UserId,
+                      user => user.Id,
+                      (entry, user) => new { entry, UserName = user.UserName, UserId = user.Id })
+                .GroupBy(x => new { x.UserId, x.UserName })
+                .Select(g => new ReportResultDto
                 {
-                    UserId = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    TotalLoggedHours = (double)userEntries.Sum(te => te.LoggedHours),
-                    TimeEntries = userEntries.Select(te => new TimeEntryReportDto
-                    {
-                        TimeEntryId = te.Id,
-                        LogDate = te.LogDate,
-                        LoggedHours = te.LoggedHours,
-                        Notes = te.Notes,
-                    }).ToList()
-                };
-            }).ToList();
+                    Title = g.Key.UserName,
+                    TotalHours = (float)g.Sum(e => e.entry.LoggedHours)
+                })
+                .ToListAsync();
 
-            return report;
+            return result;
+        }
+
+        [HttpGet("task")]
+        public async Task<List<ReportResultDto>> GetTotalHoursByTaskAsync(ReportFilterDto input)
+        {
+            var query = await _timeEntryRepository.GetQueryableAsync();
+
+            if (input.UserId.HasValue)
+                query = query.Where(e => e.UserId == input.UserId.Value);
+
+            if (input.StartDate.HasValue)
+                query = query.Where(e => e.LogDate >= input.StartDate.Value);
+
+            if (input.EndDate.HasValue)
+                query = query.Where(e => e.LogDate <= input.EndDate.Value);
+
+            if (input.ProjectId.HasValue)
+            {
+                var taskQueryable = await _taskRepository.GetQueryableAsync();
+                var taskIds = taskQueryable
+                    .Where(t => t.ProjectId == input.ProjectId.Value)
+                    .Select(t => t.Id)
+                    .ToList();
+
+                query = query.Where(e => taskIds.Contains(e.TaskId));
+            }
+
+            var taskQuery = await _taskRepository.GetQueryableAsync();
+
+            var result = await query
+                .Join(taskQuery,
+                      entry => entry.TaskId,
+                      task => task.Id,
+                      (entry, task) => new { entry, TaskName = task.Title, TaskId = task.Id })
+                .GroupBy(x => new { x.TaskId, x.TaskName })
+                .Select(g => new ReportResultDto
+                {
+                    Title = g.Key.TaskName,
+                    TotalHours = (float)g.Sum(e => e.entry.LoggedHours)
+                })
+                .ToListAsync();
+
+            return result;
         }
     }
 }
+
