@@ -44,6 +44,7 @@ public class ProjectAppService : ApplicationService, IProjectAppService
 
             return new ProjectDto
             {
+                Id = project.Id,
                 Name = project.Name,
                 Description = project.Description
             };
@@ -98,6 +99,7 @@ public class ProjectAppService : ApplicationService, IProjectAppService
 
             return new ProjectDto
             {
+                Id = project.Id,
                 Name = project.Name,
                 Description = project.Description
             };
@@ -127,6 +129,7 @@ public class ProjectAppService : ApplicationService, IProjectAppService
                      from creator in creatorGroup.DefaultIfEmpty()
                      select new ProjectDto
                      {
+                         Id = p.Id,
                          Name = p.Name,
                          Description = p.Description,
                          CreatorName = creator != null ? creator.UserName : "",
@@ -163,6 +166,7 @@ public class ProjectAppService : ApplicationService, IProjectAppService
 
             return new ProjectDto
             {
+                Id = project.Id,
                 Description = project.Description,
                 Name = project.Name
             };
