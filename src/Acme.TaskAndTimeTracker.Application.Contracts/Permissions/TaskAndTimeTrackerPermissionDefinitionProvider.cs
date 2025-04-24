@@ -29,7 +29,10 @@ public class TaskAndTimeTrackerPermissionDefinitionProvider : PermissionDefiniti
         timeEntryPermission.AddChild(TaskAndTimeTrackerPermissions.TimeEntries.Update, L("Permission:Update"));
         timeEntryPermission.AddChild(TaskAndTimeTrackerPermissions.TimeEntries.Delete, L("Permission:Delete"));
 
-        var reportsPermission = taskAndTimeTrackerGroup.AddPermission(TaskAndTimeTrackerPermissions.Reports.Generate, L("Permission:GenerateReports"));
+        var reportsPermission = taskAndTimeTrackerGroup.AddPermission(TaskAndTimeTrackerPermissions.Reports.Default, L("Permission:Reports"));
+        reportsPermission.AddChild(TaskAndTimeTrackerPermissions.Reports.ViewByProject, L("Permission:ViewByProject"));
+        reportsPermission.AddChild(TaskAndTimeTrackerPermissions.Reports.ViewByUser, L("Permission:ViewByUser"));
+        reportsPermission.AddChild(TaskAndTimeTrackerPermissions.Reports.ViewByTask, L("Permission:ViewByTask"));
     }
 
     private static LocalizableString L(string name)

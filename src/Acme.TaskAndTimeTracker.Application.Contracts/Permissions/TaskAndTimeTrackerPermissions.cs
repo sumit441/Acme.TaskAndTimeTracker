@@ -30,6 +30,9 @@ public static class TaskAndTimeTrackerPermissions
 
     public static class Reports
     {
-        public const string Generate = GroupName + ".Reports.Generate";
+        public const string Default = GroupName + ".Reports";
+        public const string ViewByProject = Default + ".ViewByProject";
+        public const string ViewByUser = Default + ".ViewByUser";
+        public const string ViewByTask = Default + ".ViewByTask";
     }
 }
